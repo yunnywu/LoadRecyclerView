@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -20,7 +22,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
 
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     Handler mHandler = new Handler();
 
+    private static final int CIRCLE_BG_LIGHT = 0xFFFAFAFA;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
         mSwipeLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_layout);
+        mSwipeLayout.setColorSchemeColors(Color.BLUE);
 
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -63,12 +66,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-
+        getAppInfo(true,1);
 
         LinearLayoutManager lm = new LinearLayoutManager(mContext);
         lm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(lm);
-
 
         mRecyclerView.setAdapter(new MyAdapter());
 
@@ -84,44 +86,93 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        getAppInfo(true,1);
-
+        mRecyclerView.addItemDecoration(new SpaceDecoration());
 
     }
 
+    class SpaceDecoration extends RecyclerView.ItemDecoration {
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            super.getItemOffsets(outRect, view, parent, state);
+            outRect.bottom = 60;
+        }
+    }
 
-    class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
-        class ViewHolder extends RecyclerView.ViewHolder {
+
+
+    class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+        private static final int NORMAL_ITEM = 0;
+        private static final int FOOTER_ITEM = 1;
+
+        class NormalViewHolder extends RecyclerView.ViewHolder {
             TextView text;
             ImageView icon;
 
-            public ViewHolder(View itemView) {
+            public NormalViewHolder(View itemView) {
                 super(itemView);
                 icon = (ImageView) itemView.findViewById(R.id.iv);
                 text = (TextView) itemView.findViewById(R.id.item_text);
             }
         }
 
+        class FootViewHolder extends RecyclerView.ViewHolder {
+
+            CircleImageView icon;
+
+            public FootViewHolder(View itemView) {
+                super(itemView);
+                icon = (CircleImageView) itemView.findViewById(R.id.foot_iv);
+            }
+        }
+
 
         @Override
-        public MyAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_item, parent,false);
-            return new ViewHolder(view);
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            if(viewType == NORMAL_ITEM) {
+                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_item, parent, false);
+                return new NormalViewHolder(view);
+            }else {
+                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_footer_item, parent, false);
+                return new FootViewHolder(view);
+            }
         }
 
         @Override
-        public void onBindViewHolder(MyAdapter.ViewHolder holder, int position) {
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+                if(holder instanceof NormalViewHolder) {
+                    NormalViewHolder normalViewHolder = (NormalViewHolder)holder;
+                    normalViewHolder.text.setText(mInfos.get(position).name);
+                    normalViewHolder.icon.setImageDrawable(mInfos.get(position).icon);
+                }else {
+                    FootViewHolder footViewHolder = (FootViewHolder)holder;
+                    MaterialProgressDrawable mProgress = new MaterialProgressDrawable(mContext, holder.itemView);
+                    mProgress.setBackgroundColor(CIRCLE_BG_LIGHT);
+                    footViewHolder.icon.setImageDrawable(mProgress);
+                    footViewHolder.icon.setVisibility(View.GONE);
+                }
 
-            holder.text.setText(mInfos.get(position).name);
-            holder.icon.setImageDrawable(mInfos.get(position).icon);
 
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if(position == mInfos.size()){
+                return FOOTER_ITEM;
+            }else {
+                return NORMAL_ITEM;
+            }
         }
 
         @Override
         public int getItemCount() {
-            return mInfos.size();
+            if(mInfos == null || mInfos.size() == 0){
+                return 0;
+            }else{
+                return mInfos.size() + 1;
+            }
+
         }
     }
 
@@ -169,8 +220,8 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(new Subscriber<List<AppInfo>>() {
                     @Override
                     public void onCompleted() {
-//                        mSwipeLayout.setRefreshing(false);
-//                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                        mSwipeLayout.setRefreshing(false);
+                        mRecyclerView.getAdapter().notifyDataSetChanged();
                         Toast.makeText(MainActivity.this, "onCompleted", Toast.LENGTH_LONG).show();
                     }
 
@@ -186,11 +237,8 @@ public class MainActivity extends AppCompatActivity {
 
                     }
 
-
                 });
 
-
     }
-
 
 }
