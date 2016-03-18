@@ -8,11 +8,15 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +33,8 @@ import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+
     RecyclerView mRecyclerView;
 
     SwipeRefreshLayout mSwipeLayout;
@@ -38,6 +44,12 @@ public class MainActivity extends AppCompatActivity {
     Handler mHandler = new Handler();
 
     private static final int CIRCLE_BG_LIGHT = 0xFFFAFAFA;
+
+    LinearLayoutManager lm;
+
+    int page = 0;
+
+    MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,13 +78,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        getAppInfo(true,1);
+        getAppInfo(true, 1);
 
-        LinearLayoutManager lm = new LinearLayoutManager(mContext);
+        lm = new LinearLayoutManager(mContext);
         lm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(lm);
-
-        mRecyclerView.setAdapter(new MyAdapter());
+        myAdapter = new MyAdapter();
+        mRecyclerView.setAdapter(myAdapter);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -83,12 +95,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+
+//                Log.d(TAG, "canChildScrollUp" + mSwipeLayout.canChildScrollUp());
+                if(lm.findLastCompletelyVisibleItemPosition() == mInfos.size()){
+                    getAppInfo(false, 0);
+                }
+
             }
         });
 
         mRecyclerView.addItemDecoration(new SpaceDecoration());
 
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
     }
+
+
 
     class SpaceDecoration extends RecyclerView.ItemDecoration {
         @Override
@@ -97,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
             outRect.bottom = 60;
         }
     }
-
-
 
 
     class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -119,21 +139,21 @@ public class MainActivity extends AppCompatActivity {
 
         class FootViewHolder extends RecyclerView.ViewHolder {
 
-            CircleImageView icon;
+            FootView icon;
 
             public FootViewHolder(View itemView) {
                 super(itemView);
-                icon = (CircleImageView) itemView.findViewById(R.id.foot_iv);
+                icon = (FootView) itemView.findViewById(R.id.foot_iv);
             }
         }
 
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            if(viewType == NORMAL_ITEM) {
+            if (viewType == NORMAL_ITEM) {
                 View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_item, parent, false);
                 return new NormalViewHolder(view);
-            }else {
+            } else {
                 View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_footer_item, parent, false);
                 return new FootViewHolder(view);
             }
@@ -141,35 +161,40 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-                if(holder instanceof NormalViewHolder) {
-                    NormalViewHolder normalViewHolder = (NormalViewHolder)holder;
-                    normalViewHolder.text.setText(mInfos.get(position).name);
-                    normalViewHolder.icon.setImageDrawable(mInfos.get(position).icon);
-                }else {
-                    FootViewHolder footViewHolder = (FootViewHolder)holder;
-                    MaterialProgressDrawable mProgress = new MaterialProgressDrawable(mContext, holder.itemView);
-                    mProgress.setBackgroundColor(CIRCLE_BG_LIGHT);
-                    footViewHolder.icon.setImageDrawable(mProgress);
-                    footViewHolder.icon.setVisibility(View.GONE);
-                }
+            if (holder instanceof NormalViewHolder) {
+                final NormalViewHolder normalViewHolder = (NormalViewHolder) holder;
+                normalViewHolder.text.setText(mInfos.get(position).name);
+                normalViewHolder.icon.setImageDrawable(mInfos.get(position).icon);
+                normalViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(MainActivity.this, normalViewHolder.text + " is clicked",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+            } else {
+                FootViewHolder footViewHolder = (FootViewHolder) holder;
+                footViewHolder.icon.setVisibility(View.VISIBLE);
+                footViewHolder.icon.start();
+            }
 
 
         }
 
         @Override
         public int getItemViewType(int position) {
-            if(position == mInfos.size()){
+            if (position == mInfos.size()) {
                 return FOOTER_ITEM;
-            }else {
+            } else {
                 return NORMAL_ITEM;
             }
         }
 
         @Override
         public int getItemCount() {
-            if(mInfos == null || mInfos.size() == 0){
+            if (mInfos == null || mInfos.size() == 0) {
                 return 0;
-            }else{
+            } else {
                 return mInfos.size() + 1;
             }
 
@@ -197,19 +222,25 @@ public class MainActivity extends AppCompatActivity {
             mInfos.clear();
         }
 
-        rx.Observable observable = rx.Observable.create(new rx.Observable.OnSubscribe< List<AppInfo>>() {
+        rx.Observable observable = rx.Observable.create(new rx.Observable.OnSubscribe<List<AppInfo>>() {
             @Override
-            public void call(Subscriber<? super  List<AppInfo>> subscriber) {
+            public void call(Subscriber<? super List<AppInfo>> subscriber) {
                 PackageManager pm = getPackageManager();
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
                 List<ResolveInfo> infos = pm.queryIntentActivities(intent, 0);
                 List<AppInfo> datas = new ArrayList<AppInfo>(infos.size());
-                for(ResolveInfo info : infos){
+                for (ResolveInfo info : infos) {
                     AppInfo app = new AppInfo(info.loadLabel(pm), info.loadIcon(pm));
                     datas.add(app);
 
+                }
+
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 subscriber.onNext(datas);
                 subscriber.onCompleted();
@@ -232,9 +263,9 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onNext( List<AppInfo> infos) {
+                    public void onNext(List<AppInfo> infos) {
                         mInfos.addAll(infos);
-
+                        myAdapter.notifyDataSetChanged();
                     }
 
                 });

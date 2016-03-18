@@ -3,11 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="100dp">
 
-    <wu.cy.demos.loadrecyclerview.CircleImageView
+    <wu.cy.demos.loadrecyclerview.FootView
         android:id="@+id/foot_iv"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_centerInParent="true">
-        </wu.cy.demos.loadrecyclerview.CircleImageView>
+        </wu.cy.demos.loadrecyclerview.FootView>
 
 </RelativeLayout>

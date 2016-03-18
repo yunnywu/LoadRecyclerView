@@ -1,8 +1,10 @@
 package wu.cy.demos.loadrecyclerview;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 /**
@@ -20,21 +22,33 @@ public class FootView extends RelativeLayout{
 
     public FootView(Context context) {
         super(context);
+        createProgressView();
     }
 
     public FootView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         createProgressView();
     }
 
     private void createProgressView() {
-        mCircleView = CircleImageView(getContext(), CIRCLE_BG_LIGHT, CIRCLE_DIAMETER/2);
-        mProgress = MaterialProgressDrawable(getContext(), this);
+        mCircleView = new CircleImageView(getContext(), CIRCLE_BG_LIGHT, CIRCLE_DIAMETER/2);
+        mProgress = new MaterialProgressDrawable(getContext(), this);
         mProgress.setBackgroundColor(CIRCLE_BG_LIGHT);
         mCircleView.setImageDrawable(mProgress);
-        mCircleView.setVisibility(View.GONE);
+        mCircleView.setVisibility(View.VISIBLE);
+        mProgress.setColorSchemeColors(Color.BLUE);
+        mProgress.setAlpha(255);
+        mProgress.showArrow(true);
+        RelativeLayout.LayoutParams rl = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        rl.addRule(CENTER_IN_PARENT,TRUE);
         addView(mCircleView);
+    }
+
+    public void start(){
+        if(mProgress != null){
+            mProgress.start();
+        }
     }
 
 
