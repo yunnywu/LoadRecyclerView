@@ -5,6 +5,9 @@ import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
 
 /**
@@ -20,6 +23,8 @@ public class FootView extends RelativeLayout{
 
     private static final int CIRCLE_DIAMETER = 40;
 
+    private Animation mPhotoOutAnim;
+
     public FootView(Context context) {
         super(context);
         createProgressView();
@@ -27,7 +32,12 @@ public class FootView extends RelativeLayout{
 
     public FootView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        initView();
+
         createProgressView();
+    }
+
+    private void initView() {
     }
 
     private void createProgressView() {
@@ -51,5 +61,9 @@ public class FootView extends RelativeLayout{
         }
     }
 
-
+    public void stop(){
+        if(mProgress != null){
+            mProgress.stop();
+        }
+    }
 }

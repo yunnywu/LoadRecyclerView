@@ -8,15 +8,12 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,15 +38,15 @@ public class MainActivity extends AppCompatActivity {
 
     Context mContext;
 
-    Handler mHandler = new Handler();
-
-    private static final int CIRCLE_BG_LIGHT = 0xFFFAFAFA;
-
     LinearLayoutManager lm;
 
-    int page = 0;
+    int currentPage = 0;
 
-    MyAdapter myAdapter;
+    int totalPage = 1;
+
+    WrapperRecyclerAdapter myAdapter;
+
+    LoadScrollListener mScrollListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,43 +63,28 @@ public class MainActivity extends AppCompatActivity {
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mSwipeLayout.setRefreshing(false);
-                    }
-                }, 3000);
-
+//                if(!mSwipeLayout.isRefreshing()) {
+                getAppInfo(true);
+//                }
             }
         });
 
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                getAppInfo(true);
+            }
+        }, 500);
 
-        getAppInfo(true, 1);
 
         lm = new LinearLayoutManager(mContext);
         lm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(lm);
-        myAdapter = new MyAdapter();
+        myAdapter = new WrapperRecyclerAdapter(MainActivity.this,new MyAdapter());
         mRecyclerView.setAdapter(myAdapter);
 
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-
-//                Log.d(TAG, "canChildScrollUp" + mSwipeLayout.canChildScrollUp());
-                if(lm.findLastCompletelyVisibleItemPosition() == mInfos.size()){
-                    getAppInfo(false, 0);
-                }
-
-            }
-        });
+        mScrollListener = new LoadScrollListener();
+        mRecyclerView.addOnScrollListener(mScrollListener);
 
         mRecyclerView.addItemDecoration(new SpaceDecoration());
 
@@ -110,7 +92,22 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    class LoadScrollListener extends RecyclerView.OnScrollListener{
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+        }
 
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+            //如果最后一项是FOOTVIEW 说明还可以加载更多
+            if (lm.findLastCompletelyVisibleItemPosition() == mInfos.size()) {
+                getAppInfo(false);
+            }
+
+        }
+    }
 
     class SpaceDecoration extends RecyclerView.ItemDecoration {
         @Override
@@ -120,12 +117,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mRecyclerView.removeOnScrollListener(mScrollListener);
+    }
 
     class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-        private static final int NORMAL_ITEM = 0;
-        private static final int FOOTER_ITEM = 1;
-
         class NormalViewHolder extends RecyclerView.ViewHolder {
             TextView text;
             ImageView icon;
@@ -137,67 +135,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        class FootViewHolder extends RecyclerView.ViewHolder {
-
-            FootView icon;
-
-            public FootViewHolder(View itemView) {
-                super(itemView);
-                icon = (FootView) itemView.findViewById(R.id.foot_iv);
-            }
-        }
-
-
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            if (viewType == NORMAL_ITEM) {
-                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_item, parent, false);
-                return new NormalViewHolder(view);
-            } else {
-                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_footer_item, parent, false);
-                return new FootViewHolder(view);
-            }
+            View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_item, parent, false);
+            return new NormalViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            if (holder instanceof NormalViewHolder) {
-                final NormalViewHolder normalViewHolder = (NormalViewHolder) holder;
-                normalViewHolder.text.setText(mInfos.get(position).name);
-                normalViewHolder.icon.setImageDrawable(mInfos.get(position).icon);
-                normalViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, normalViewHolder.text + " is clicked",
-                                Toast.LENGTH_LONG).show();
-                    }
-                });
-            } else {
-                FootViewHolder footViewHolder = (FootViewHolder) holder;
-                footViewHolder.icon.setVisibility(View.VISIBLE);
-                footViewHolder.icon.start();
-            }
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
+            final NormalViewHolder normalViewHolder = (NormalViewHolder) holder;
+            normalViewHolder.text.setText(mInfos.get(position).name);
+            normalViewHolder.icon.setImageDrawable(mInfos.get(position).icon);
+            normalViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this, normalViewHolder.text.getText() + " is clicked",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
 
-
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (position == mInfos.size()) {
-                return FOOTER_ITEM;
-            } else {
-                return NORMAL_ITEM;
-            }
         }
 
         @Override
         public int getItemCount() {
-            if (mInfos == null || mInfos.size() == 0) {
-                return 0;
-            } else {
-                return mInfos.size() + 1;
-            }
-
+            return mInfos.size();
         }
     }
 
@@ -217,9 +178,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isRefresh;
     private List<AppInfo> mInfos = new ArrayList<>();
 
-    private void getAppInfo(boolean refresh, int page) {
+    private void getAppInfo(final boolean refresh) {
         if (refresh) {
             mInfos.clear();
+            currentPage = 0;
         }
 
         rx.Observable observable = rx.Observable.create(new rx.Observable.OnSubscribe<List<AppInfo>>() {
@@ -251,21 +213,33 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(new Subscriber<List<AppInfo>>() {
                     @Override
                     public void onCompleted() {
-                        mSwipeLayout.setRefreshing(false);
-                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                        if (refresh) {
+                            mSwipeLayout.setRefreshing(false);
+                        }
+
+                        if (currentPage == totalPage - 1) {
+                            myAdapter.setNeedLoadMore(false);
+                        }else{
+                            myAdapter.setNeedLoadMore(true);
+                        }
+                        myAdapter.notifyDataSetChanged();
+                        currentPage++;
+
                         Toast.makeText(MainActivity.this, "onCompleted", Toast.LENGTH_LONG).show();
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Toast.makeText(MainActivity.this, "onError", Toast.LENGTH_LONG).show();
+                        if (refresh) {
+                            mSwipeLayout.setRefreshing(false);
+                        }
                         e.printStackTrace();
                     }
 
                     @Override
                     public void onNext(List<AppInfo> infos) {
                         mInfos.addAll(infos);
-                        myAdapter.notifyDataSetChanged();
                     }
 
                 });
