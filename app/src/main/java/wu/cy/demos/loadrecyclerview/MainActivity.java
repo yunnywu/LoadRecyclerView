@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
     int currentPage = 0;
 
-    int totalPage = 1;
+    int totalPage = 4;
 
     WrapperRecyclerAdapter myAdapter;
 

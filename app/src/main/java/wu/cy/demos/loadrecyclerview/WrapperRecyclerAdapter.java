@@ -32,8 +32,8 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if(viewType == FOOTER_ITEM){
-        View view = LayoutInflater.from(mContext).inflate(R.layout.layout_footer_item, parent, false);
-        return new FootViewHolder(view);
+            View view = LayoutInflater.from(mContext).inflate(R.layout.layout_footer_item, parent, false);
+            return new FootViewHolder(view);
         }else{
             return mAdapter.onCreateViewHolder(parent, viewType);
         }
@@ -44,7 +44,9 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         if (holder instanceof FootViewHolder) {
             FootViewHolder footViewHolder = (FootViewHolder) holder;
             footViewHolder.icon.setVisibility(View.VISIBLE);
-            footViewHolder.icon.start();
+            if(!footViewHolder.icon.isRunning()) {
+                footViewHolder.icon.start();
+            }
         } else {
             mAdapter.onBindViewHolder(holder,position);
         }
@@ -65,10 +67,10 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     }
 
     class FootViewHolder extends RecyclerView.ViewHolder {
-        FootView icon;
+        CircleProgressView icon;
         public FootViewHolder(View itemView) {
             super(itemView);
-            icon = (FootView) itemView.findViewById(R.id.foot_iv);
+            icon = (CircleProgressView) itemView.findViewById(R.id.foot_iv);
         }
     }
 }

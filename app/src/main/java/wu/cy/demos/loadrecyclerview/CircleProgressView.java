@@ -2,6 +2,7 @@ package wu.cy.demos.loadrecyclerview;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,10 +11,12 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
 
+import java.util.ArrayList;
+
 /**
  * Created by wcy8038 on 2016/3/17.
  */
-public class FootView extends RelativeLayout{
+public class CircleProgressView extends RelativeLayout{
 
     CircleImageView mCircleView;
 
@@ -23,21 +26,18 @@ public class FootView extends RelativeLayout{
 
     private static final int CIRCLE_DIAMETER = 40;
 
-    private Animation mPhotoOutAnim;
-
-    public FootView(Context context) {
+    public CircleProgressView(Context context) {
         super(context);
-        createProgressView();
+        initView();
     }
 
-    public FootView(Context context, AttributeSet attrs) {
+    public CircleProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
         initView();
-
-        createProgressView();
     }
 
     private void initView() {
+        createProgressView();
     }
 
     private void createProgressView() {
@@ -58,12 +58,38 @@ public class FootView extends RelativeLayout{
     public void start(){
         if(mProgress != null){
             mProgress.start();
+            mProgress.showArrow(true);
         }
+    }
+
+    /**
+     * Set the colors used in the progress animation. The first
+     * color will also be the color of the bar that grows in response to a user
+     * swipe gesture.
+     *
+     * @param colors
+     */
+    @ColorInt
+    public void setColorSchemeColors(int... colors) {
+        mProgress.setColorSchemeColors(colors);
     }
 
     public void stop(){
         if(mProgress != null){
             mProgress.stop();
         }
+    }
+
+    public boolean isRunning() {
+        if(mProgress != null){
+            return mProgress.isRunning();
+        }
+        return false;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        stop();
     }
 }
