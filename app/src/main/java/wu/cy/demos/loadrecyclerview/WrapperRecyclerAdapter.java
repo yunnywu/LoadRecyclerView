@@ -62,7 +62,7 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         if (position == mAdapter.getItemCount()) {
             return FOOTER_ITEM;
         } else {
-            return NORMAL_ITEM;
+            return mAdapter.getItemViewType(position);
         }
     }
 
