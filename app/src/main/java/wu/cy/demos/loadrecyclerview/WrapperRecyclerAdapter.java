@@ -11,8 +11,8 @@ import android.view.ViewGroup;
  */
 public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
-    private static final int NORMAL_ITEM = 0;
-    private static final int FOOTER_ITEM = 1;
+    //this can repeat with the child item type
+    private static final int FOOTER_ITEM = 100001;
 
     private boolean needLoading = true;
 
