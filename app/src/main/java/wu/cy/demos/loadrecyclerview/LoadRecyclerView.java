@@ -23,6 +23,8 @@ public class LoadRecyclerView extends RecyclerView{
 
     private WrapperRecyclerAdapter mWrapperAdapter;
 
+    private boolean canLoadMore;
+
     public LoadRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         initView();
@@ -73,7 +75,7 @@ public class LoadRecyclerView extends RecyclerView{
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
-            if(mCurrentState != STATE_IDEL){
+            if(mCurrentState != STATE_IDEL || !canLoadMore){
                 return;
             }
 
@@ -100,7 +102,8 @@ public class LoadRecyclerView extends RecyclerView{
         }
     }
 
-    public void setShowTheFooterView(boolean show){
+    public void setCanLoadMore(boolean show){
+        canLoadMore = show;
         mWrapperAdapter.setNeedLoadMore(show);
     }
 

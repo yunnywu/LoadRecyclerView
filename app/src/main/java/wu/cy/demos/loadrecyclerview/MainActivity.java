@@ -199,9 +199,9 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         if (currentPage == totalPage - 1) {
-                            mRecyclerView.setShowTheFooterView(false);
+                            mRecyclerView.setCanLoadMore(false);
                         }else{
-                            mRecyclerView.setShowTheFooterView(true);
+                            mRecyclerView.setCanLoadMore(true);
                             currentPage++;
                         }
                         mRecyclerView.getAdapter().notifyDataSetChanged();
