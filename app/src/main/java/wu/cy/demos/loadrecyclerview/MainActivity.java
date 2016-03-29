@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    RecyclerView mRecyclerView;
+    LoadRecyclerView mRecyclerView;
 
     SwipeRefreshLayout mSwipeLayout;
 
@@ -44,9 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     int totalPage = 4;
 
-    WrapperRecyclerAdapter myAdapter;
-
-    LoadScrollListener mScrollListener;
+    MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         mContext = MainActivity.this;
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView = (LoadRecyclerView) findViewById(R.id.recycler_view);
 
         mSwipeLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_layout);
         mSwipeLayout.setColorSchemeColors(Color.BLUE);
@@ -64,15 +62,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
 //                if(!mSwipeLayout.isRefreshing()) {
-                getAppInfo(true);
+                loadData(0);
 //                }
             }
         });
-
+        mSwipeLayout.setRefreshing(false);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                getAppInfo(true);
+                loadData(0);
             }
         }, 500);
 
@@ -80,33 +78,19 @@ public class MainActivity extends AppCompatActivity {
         lm = new LinearLayoutManager(mContext);
         lm.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(lm);
-        myAdapter = new WrapperRecyclerAdapter(MainActivity.this,new MyAdapter());
+        myAdapter = new MyAdapter();
         mRecyclerView.setAdapter(myAdapter);
-
-        mScrollListener = new LoadScrollListener();
-        mRecyclerView.addOnScrollListener(mScrollListener);
 
         mRecyclerView.addItemDecoration(new SpaceDecoration());
 
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-    }
-
-    class LoadScrollListener extends RecyclerView.OnScrollListener{
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
-        }
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            super.onScrolled(recyclerView, dx, dy);
-            //如果最后一项是FOOTVIEW 说明还可以加载更多
-            if (lm.findLastCompletelyVisibleItemPosition() == mInfos.size()) {
-                getAppInfo(false);
+        mRecyclerView.setOnLoadNextListener(new LoadRecyclerView.OnLoadNextListener() {
+            @Override
+            public void onLoadNext() {
+                loadData(currentPage);
             }
-
-        }
+        });
     }
 
     class SpaceDecoration extends RecyclerView.ItemDecoration {
@@ -115,12 +99,6 @@ public class MainActivity extends AppCompatActivity {
             super.getItemOffsets(outRect, view, parent, state);
             outRect.bottom = 60;
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mRecyclerView.removeOnScrollListener(mScrollListener);
     }
 
     class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -174,14 +152,15 @@ public class MainActivity extends AppCompatActivity {
         Drawable icon;
     }
 
-
-    private boolean isRefresh;
     private List<AppInfo> mInfos = new ArrayList<>();
 
-    private void getAppInfo(final boolean refresh) {
-        if (refresh) {
-            mInfos.clear();
+    private void loadData(int pageIndex) {
+        final boolean isRefresh = pageIndex == 0;
+        if (pageIndex == 0) {
+            mSwipeLayout.setRefreshing(true);
             currentPage = 0;
+        }else{
+            mRecyclerView.setState(LoadRecyclerView.STATE_LOADING);
         }
 
         rx.Observable observable = rx.Observable.create(new rx.Observable.OnSubscribe<List<AppInfo>>() {
@@ -213,37 +192,41 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(new Subscriber<List<AppInfo>>() {
                     @Override
                     public void onCompleted() {
-                        if (refresh) {
+                        if (isRefresh) {
                             mSwipeLayout.setRefreshing(false);
+                        }else{
+                            mRecyclerView.setState(LoadRecyclerView.STATE_IDEL);
                         }
 
                         if (currentPage == totalPage - 1) {
-                            myAdapter.setNeedLoadMore(false);
+                            mRecyclerView.setShowTheFooterView(false);
                         }else{
-                            myAdapter.setNeedLoadMore(true);
+                            mRecyclerView.setShowTheFooterView(true);
+                            currentPage++;
                         }
-                        myAdapter.notifyDataSetChanged();
-                        currentPage++;
-
+                        mRecyclerView.getAdapter().notifyDataSetChanged();
                         Toast.makeText(MainActivity.this, "onCompleted", Toast.LENGTH_LONG).show();
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Toast.makeText(MainActivity.this, "onError", Toast.LENGTH_LONG).show();
-                        if (refresh) {
+                        if (isRefresh) {
                             mSwipeLayout.setRefreshing(false);
+                        }else{
+                            mRecyclerView.setState(LoadRecyclerView.STATE_IDEL);
                         }
                         e.printStackTrace();
                     }
 
                     @Override
                     public void onNext(List<AppInfo> infos) {
+                        if (isRefresh) {
+                            mInfos.clear();
+                        }
                         mInfos.addAll(infos);
                     }
-
                 });
-
     }
 
 }
