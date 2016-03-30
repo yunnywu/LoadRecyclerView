@@ -47,6 +47,7 @@ public class LoadRecyclerView extends RecyclerView{
     @Override
     public void setAdapter(Adapter adapter) {
         mWrapperAdapter = new WrapperRecyclerAdapter(getContext(),adapter);
+        setCanLoadMore(false);
         super.setAdapter(mWrapperAdapter);
     }
 
