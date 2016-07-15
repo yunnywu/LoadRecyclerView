@@ -1,4 +1,4 @@
-package wu.cy.demos.loadrecyclerview;
+package com.wu.cy.loadrecyclerview;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;

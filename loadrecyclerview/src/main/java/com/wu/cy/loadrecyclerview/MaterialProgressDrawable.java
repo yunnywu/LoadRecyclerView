@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package wu.cy.demos.loadrecyclerview;
+package com.wu.cy.loadrecyclerview;
 
 import android.content.Context;
 import android.content.res.Resources;
