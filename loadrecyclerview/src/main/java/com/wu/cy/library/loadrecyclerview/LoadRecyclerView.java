@@ -80,7 +80,7 @@ public class LoadRecyclerView extends RecyclerView{
                 return;
             }
 
-            //如果最后一项是FOOTVIEW 说明还可以加载更多
+            //if this is a footview ,than can load more
                 if(getLayoutManager() instanceof LinearLayoutManager){
                     LinearLayoutManager linearLayoutManager = (LinearLayoutManager) getLayoutManager();
                     if(getAdapter() != null && getAdapter().getItemCount() != 0 &&
