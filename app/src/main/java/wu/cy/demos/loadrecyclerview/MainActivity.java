@@ -21,7 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.wu.cy.loadrecyclerview.LoadRecyclerView;
+import com.wu.cy.library.loadrecyclerview.LoadRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(15000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

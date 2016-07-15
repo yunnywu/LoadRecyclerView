@@ -1,4 +1,4 @@
-package com.wu.cy.loadrecyclerview;
+package com.wu.cy.library.loadrecyclerview;
 
 import android.content.Context;
 import android.graphics.Canvas;

@@ -1,9 +1,11 @@
-package com.wu.cy.loadrecyclerview;
+package com.wu.cy.library.loadrecyclerview;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -46,8 +48,10 @@ public class CircleProgressView extends RelativeLayout{
         mProgress.showArrow(true);
         RelativeLayout.LayoutParams rl = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getContext().getResources().getDisplayMetrics());
+        rl.bottomMargin = rl.rightMargin = rl.leftMargin = rl.topMargin = margin;
         rl.addRule(CENTER_IN_PARENT,TRUE);
-        addView(mCircleView);
+        addView(mCircleView,rl);
     }
 
     public void start(){
