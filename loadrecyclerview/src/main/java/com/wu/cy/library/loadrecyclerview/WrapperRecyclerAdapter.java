@@ -1,6 +1,7 @@
 package com.wu.cy.library.loadrecyclerview;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,8 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     private RecyclerView.Adapter mAdapter;
 
+    private int[] mColors ;
+
     public WrapperRecyclerAdapter(Context mContext, RecyclerView.Adapter mAdapter) {
         this.mContext = mContext;
         this.mAdapter = mAdapter;
@@ -27,6 +30,10 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     public void setNeedLoadMore(boolean loaded){
         needLoading = loaded;
+    }
+
+    public void setColorSchemeColors(int... colors){
+        mColors = colors;
     }
 
     @Override
@@ -71,6 +78,7 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         public FootViewHolder(View itemView) {
             super(itemView);
             icon = (CircleProgressView) itemView.findViewById(R.id.foot_iv);
+            icon.setColorSchemeColors(mColors);
         }
     }
 }

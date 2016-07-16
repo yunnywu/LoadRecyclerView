@@ -1,6 +1,7 @@
 package com.wu.cy.library.loadrecyclerview;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -11,11 +12,10 @@ import android.util.AttributeSet;
  */
 public class LoadRecyclerView extends RecyclerView{
 
-    public static final int STATE_IDEL = 0;
-    public static final int STATE_REFRESH = 1;
+    public static final int STATE_IDLE = 0;
     public static final int STATE_LOADING = 2;
 
-    private int mCurrentState = STATE_IDEL;
+    private int mCurrentState = STATE_IDLE;
 
     CustomOnScrollListener mCustomOnScrollListener;
 
@@ -24,6 +24,16 @@ public class LoadRecyclerView extends RecyclerView{
     private WrapperRecyclerAdapter mWrapperAdapter;
 
     private boolean canLoadMore;
+
+    private int[] mColors = {Color.BLUE};
+
+    /**
+     * set progress circle colors
+     * @param colors
+     */
+    public void setColorSchemeColors(int... colors){
+        mColors = colors;
+    }
 
     public LoadRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -48,6 +58,7 @@ public class LoadRecyclerView extends RecyclerView{
     public void setAdapter(Adapter adapter) {
         mWrapperAdapter = new WrapperRecyclerAdapter(getContext(),adapter);
         setCanLoadMore(false);
+        mWrapperAdapter.setColorSchemeColors(mColors);
         super.setAdapter(mWrapperAdapter);
     }
 
@@ -76,7 +87,7 @@ public class LoadRecyclerView extends RecyclerView{
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
-            if(mCurrentState != STATE_IDEL || !canLoadMore){
+            if(mCurrentState != STATE_IDLE || !canLoadMore){
                 return;
             }
 
@@ -84,7 +95,7 @@ public class LoadRecyclerView extends RecyclerView{
                 if(getLayoutManager() instanceof LinearLayoutManager){
                     LinearLayoutManager linearLayoutManager = (LinearLayoutManager) getLayoutManager();
                     if(getAdapter() != null && getAdapter().getItemCount() != 0 &&
-                            linearLayoutManager.findLastCompletelyVisibleItemPosition()
+                            linearLayoutManager.findLastVisibleItemPosition()
                             == getAdapter().getItemCount() - 1){
                         if(mOnLoadNextListener != null){
                             mOnLoadNextListener.onLoadNext();
@@ -101,6 +112,10 @@ public class LoadRecyclerView extends RecyclerView{
         }else{
             mCurrentState = state;
         }
+    }
+
+    public boolean isLoadingMore(){
+        return mCurrentState == STATE_LOADING;
     }
 
     public void setCanLoadMore(boolean show){

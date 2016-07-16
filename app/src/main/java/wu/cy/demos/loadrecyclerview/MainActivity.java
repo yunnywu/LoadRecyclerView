@@ -42,9 +42,9 @@ public class MainActivity extends AppCompatActivity {
 
     LinearLayoutManager lm;
 
-    int currentPage = 0;
+    int currentOffset = 0;
 
-    int totalPage = 4;
+    int totalCount = 0;
 
     MyAdapter myAdapter;
 
@@ -58,21 +58,19 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = (LoadRecyclerView) findViewById(R.id.recycler_view);
 
         mSwipeLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_layout);
-        mSwipeLayout.setColorSchemeColors(Color.BLUE);
+        mSwipeLayout.setColorSchemeColors(new int[]{Color.BLUE,Color.GREEN,Color.MAGENTA});
+        mRecyclerView.setColorSchemeColors(new int[]{Color.BLUE,Color.GREEN,Color.MAGENTA});
 
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-//                if(!mSwipeLayout.isRefreshing()) {
-                loadData(0);
-//                }
+                loadFirst();
             }
         });
-        mSwipeLayout.setRefreshing(false);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                loadData(0);
+                loadFirst();
             }
         }, 500);
 
@@ -90,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setOnLoadNextListener(new LoadRecyclerView.OnLoadNextListener() {
             @Override
             public void onLoadNext() {
-                loadData(currentPage);
+                loadData(currentOffset);
             }
         });
     }
@@ -156,13 +154,17 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AppInfo> mInfos = new ArrayList<>();
 
+    private void loadFirst(){
+        currentOffset = 0;
+        loadData(currentOffset);
+    }
+
+
+
     private void loadData(int pageIndex) {
         final boolean isRefresh = pageIndex == 0;
-        if (pageIndex == 0) {
+        if(isRefresh && !mSwipeLayout.isRefreshing()){
             mSwipeLayout.setRefreshing(true);
-            currentPage = 0;
-        }else{
-            mRecyclerView.setState(LoadRecyclerView.STATE_LOADING);
         }
 
         rx.Observable observable = rx.Observable.create(new rx.Observable.OnSubscribe<List<AppInfo>>() {
@@ -174,16 +176,20 @@ public class MainActivity extends AppCompatActivity {
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
                 List<ResolveInfo> infos = pm.queryIntentActivities(intent, 0);
                 List<AppInfo> datas = new ArrayList<AppInfo>(infos.size());
-                for (ResolveInfo info : infos) {
-                    AppInfo app = new AppInfo(info.loadLabel(pm), info.loadIcon(pm));
+                totalCount = infos.size();
+                int returnCount = Math.min(infos.size() - currentOffset, 10);
+                for (int i = currentOffset; i < returnCount + currentOffset; i++) {
+                    AppInfo app = new AppInfo(infos.get(i).loadLabel(pm), infos.get(i).loadIcon(pm));
                     datas.add(app);
-
                 }
 
+                currentOffset += returnCount;
+
                 try {
-                    Thread.sleep(15000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    subscriber.onError(e);
                 }
                 subscriber.onNext(datas);
                 subscriber.onCompleted();
@@ -194,39 +200,39 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(new Subscriber<List<AppInfo>>() {
                     @Override
                     public void onCompleted() {
-                        if (isRefresh) {
+
+                        if(isRefresh){
                             mSwipeLayout.setRefreshing(false);
                         }else{
-                            mRecyclerView.setState(LoadRecyclerView.STATE_IDEL);
+                            mRecyclerView.setState(LoadRecyclerView.STATE_IDLE);
                         }
 
-                        if (currentPage == totalPage - 1) {
+                        if (currentOffset == totalCount) {
                             mRecyclerView.setCanLoadMore(false);
                         }else{
                             mRecyclerView.setCanLoadMore(true);
-                            currentPage++;
                         }
-                        mRecyclerView.getAdapter().notifyDataSetChanged();
+
                         Toast.makeText(MainActivity.this, "onCompleted", Toast.LENGTH_LONG).show();
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Toast.makeText(MainActivity.this, "onError", Toast.LENGTH_LONG).show();
-                        if (isRefresh) {
+                        if(isRefresh){
                             mSwipeLayout.setRefreshing(false);
                         }else{
-                            mRecyclerView.setState(LoadRecyclerView.STATE_IDEL);
+                            mRecyclerView.setState(LoadRecyclerView.STATE_IDLE);
                         }
-                        e.printStackTrace();
                     }
 
                     @Override
                     public void onNext(List<AppInfo> infos) {
-                        if (isRefresh) {
+                        if(isRefresh){
                             mInfos.clear();
                         }
                         mInfos.addAll(infos);
+                        mRecyclerView.getAdapter().notifyDataSetChanged();
                     }
                 });
     }

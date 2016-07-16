@@ -43,7 +43,6 @@ public class CircleProgressView extends RelativeLayout{
         mProgress.setBackgroundColor(CIRCLE_BG_LIGHT);
         mCircleView.setImageDrawable(mProgress);
         mCircleView.setVisibility(View.VISIBLE);
-        mProgress.setColorSchemeColors(Color.BLUE);
         mProgress.setAlpha(255);
         mProgress.showArrow(true);
         RelativeLayout.LayoutParams rl = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -90,5 +89,9 @@ public class CircleProgressView extends RelativeLayout{
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         stop();
+    }
+
+    public void setProgressColors(int... colors){
+        mProgress.setColorSchemeColors(colors);
     }
 }
