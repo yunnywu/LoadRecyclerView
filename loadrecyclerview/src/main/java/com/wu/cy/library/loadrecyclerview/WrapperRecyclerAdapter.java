@@ -3,6 +3,7 @@ package com.wu.cy.library.loadrecyclerview;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,9 +52,11 @@ public class WrapperRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         if (holder instanceof FootViewHolder) {
             FootViewHolder footViewHolder = (FootViewHolder) holder;
             footViewHolder.icon.setVisibility(View.VISIBLE);
-            if(!footViewHolder.icon.isRunning()) {
-                footViewHolder.icon.start();
-            }
+            Log.d("wcy", "onBindViewHolder");
+//            if(!footViewHolder.icon.isRunning()) {
+//                Log.d("wcy", "onBindViewHolder start");
+//                footViewHolder.icon.start();
+//            }
         } else {
             mAdapter.onBindViewHolder(holder,position);
         }

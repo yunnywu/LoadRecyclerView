@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,6 +90,12 @@ public class CircleProgressView extends RelativeLayout{
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         stop();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        start();
     }
 
     public void setProgressColors(int... colors){
