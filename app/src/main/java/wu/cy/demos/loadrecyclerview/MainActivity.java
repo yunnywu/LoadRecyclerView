@@ -187,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     Thread.sleep(2000);
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     subscriber.onError(e);
