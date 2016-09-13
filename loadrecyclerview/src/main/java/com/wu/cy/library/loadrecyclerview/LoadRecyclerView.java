@@ -94,9 +94,11 @@ public class LoadRecyclerView extends RecyclerView{
             //if this is a footview ,than can load more
                 if(getLayoutManager() instanceof LinearLayoutManager){
                     LinearLayoutManager linearLayoutManager = (LinearLayoutManager) getLayoutManager();
-                    if(getAdapter() != null && getAdapter().getItemCount() != 0 &&
-                            linearLayoutManager.findLastVisibleItemPosition()
-                            == getAdapter().getItemCount() - 1){
+                    int firstVisibleItem = linearLayoutManager.findFirstVisibleItemPosition();
+                    int totalItemCount = linearLayoutManager.getItemCount();
+                    int visibleItemCount = linearLayoutManager.getChildCount();
+                    boolean bottomEdgeHit = firstVisibleItem + visibleItemCount >= totalItemCount;
+                    if(getAdapter() != null && getAdapter().getItemCount() != 0 && bottomEdgeHit){
                         if(mOnLoadNextListener != null){
                             mOnLoadNextListener.onLoadNext();
                             setState(STATE_LOADING);
